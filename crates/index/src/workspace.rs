@@ -33,7 +33,9 @@
 //! spelling-to-file map in memory and read the rows for one query out of
 //! SQLite on a worker.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+#[cfg(not(target_family = "wasm"))]
+use std::collections::BTreeMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use javelin_classpath::{
@@ -862,13 +864,17 @@ impl CacheDb {
         // seconds on one — and stored here, where the connection is, a batch
         // per transaction. Parsers are built only where something needs
         // parsing: a warm start that skips every file must not pay for one.
+        #[cfg(not(target_family = "wasm"))]
         let threads = std::thread::available_parallelism()
             .map_or(1, |cores| cores.get().saturating_sub(1).max(1))
             .min(stale.len());
+        #[cfg(not(target_family = "wasm"))]
         let parsers = (0..threads)
             .map(|_| JavaParser::new())
             .collect::<std::result::Result<Vec<_>, _>>()?;
+        #[cfg(not(target_family = "wasm"))]
         let next = std::sync::atomic::AtomicUsize::new(0);
+        #[cfg(not(target_family = "wasm"))]
         std::thread::scope(|scope| {
             // Inside the scope, so an early return drops the receiver and
             // every thread stops at its next send.
@@ -910,6 +916,24 @@ impl CacheDb {
             }
             self.store_facts(&batch, &mut changed)
         })?;
+        // A target with no threads, `wasm32-wasip1`, parses the same stale files
+        // one after another and stores them in the same order.
+        #[cfg(target_family = "wasm")]
+        {
+            let mut parser = JavaParser::new()?;
+            let mut batch: Vec<SourceFacts> = Vec::with_capacity(BATCH);
+            for file in &stale {
+                if cancel.is_cancelled() {
+                    break;
+                }
+                batch.extend(read_facts(file, &mut parser, cancel));
+                if batch.len() == BATCH {
+                    self.store_facts(&batch, &mut changed)?;
+                    batch.clear();
+                }
+            }
+            self.store_facts(&batch, &mut changed)?;
+        }
 
         Ok((changed, gone.into_iter().map(PathBuf::from).collect()))
     }

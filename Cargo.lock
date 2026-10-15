@@ -621,6 +621,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "javelin-wasm"
+version = "0.0.1"
+dependencies = [
+ "javelin-classpath",
+ "javelin-core",
+ "javelin-document",
+ "javelin-index",
+ "javelin-parser",
+ "javelin-semantic",
+ "javelin-server",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "js-sys"
 version = "0.3.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"

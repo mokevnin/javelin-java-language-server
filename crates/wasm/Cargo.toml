@@ -1,0 +1,27 @@
+[package]
+name = "javelin-wasm"
+description = "Member completion over a prebuilt JDK index, as a WASI reactor for a browser worker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+# No `[lints] workspace = true`: the C ABI below needs `unsafe`, which the
+# workspace denies.
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+javelin-core.workspace = true
+javelin-classpath = { workspace = true, features = ["serde"] }
+javelin-document.workspace = true
+javelin-index.workspace = true
+javelin-parser.workspace = true
+javelin-semantic.workspace = true
+javelin-server.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true

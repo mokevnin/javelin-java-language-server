@@ -11,11 +11,16 @@ authors.workspace = true
 [lints]
 workspace = true
 
+[features]
+# Derives `Serialize` and `Deserialize` on the public declaration types.
+serde = ["dep:serde"]
+
 [dependencies]
 javelin-core.workspace = true
 javelin-document.workspace = true
 tracing.workspace = true
 tree-sitter = "0.27.0"
 tree-sitter-java = "0.23.5"
+serde = { workspace = true, optional = true }
 
 [dev-dependencies]

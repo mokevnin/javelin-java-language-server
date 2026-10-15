@@ -519,6 +519,8 @@ dependencies = [
  "javelin-core",
  "javelin-document",
  "javelin-parser",
+ "serde",
+ "serde_json",
  "tracing",
  "zip",
 ]
@@ -574,6 +576,7 @@ version = "0.0.1"
 dependencies = [
  "javelin-core",
  "javelin-document",
+ "serde",
  "tracing",
  "tree-sitter",
  "tree-sitter-java",

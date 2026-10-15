@@ -54,6 +54,8 @@ jobs:
       - run: cargo build --workspace --all-targets
       - name: Unit and integration tests
         run: cargo test --workspace --all-targets --no-fail-fast
+      - name: Serde feature
+        run: cargo test -p javelin-classpath --features serde
 
   docs:
     name: Docs

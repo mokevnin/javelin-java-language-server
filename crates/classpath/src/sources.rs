@@ -25,6 +25,7 @@ use crate::resolve::{Resolution, TypeTable, simple_name};
 
 /// One type the sources declare.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TypeFacts {
     /// Source-form fully-qualified name, `.` between nesting levels:
     /// `java.util.Map.Entry`.
@@ -84,6 +85,7 @@ pub struct TypeFacts {
 
 /// One member a type declares.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MemberFacts {
     pub name: String,
     pub kind: DeclKind,
@@ -128,6 +130,7 @@ pub struct MemberFacts {
 /// parameter — that nothing is claimed about that one name, where
 /// [`TypeFacts::supertypes_complete`] has to speak for a whole closure at once.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum MemberType {
     Void,
     /// The keyword, `"int"` or `"boolean"`, rather than a
@@ -2664,5 +2667,20 @@ mod tests {
                 found.map(|m| (&m.declared, &m.parameters))
             );
         }
+    }
+
+    /// The facts a prebuilt index ships as must come back exactly as they went in.
+    #[cfg(feature = "serde")]
+    #[test]
+    fn type_facts_survive_a_serde_round_trip() {
+        let dir = scratch("serde-round-trip");
+        let source = "package p;\npublic class Box<T> extends Object {\n    public T get() { return null; }\n    public static int count(String... xs) { return 0; }\n}\n";
+        let zip_path = write_zip(&dir, &[("java.base/p/Box.java", source)]);
+
+        let facts = read(&zip_path).expect("read");
+        assert!(!facts.is_empty());
+        let json = serde_json::to_string(&facts).expect("serialises");
+        let back: Vec<TypeFacts> = serde_json::from_str(&json).expect("deserialises");
+        assert_eq!(facts, back);
     }
 }

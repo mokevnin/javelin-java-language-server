@@ -43,6 +43,7 @@ pub struct Span {
 
 /// What a [`Decl`] declares.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DeclKind {
     Class,
     Interface,

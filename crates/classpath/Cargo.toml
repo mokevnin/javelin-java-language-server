@@ -11,9 +11,18 @@ authors.workspace = true
 [lints]
 workspace = true
 
+[features]
+# Derives `Serialize` and `Deserialize` on the type facts, so a prebuilt index of
+# the JDK can be shipped as a flat file instead of being rebuilt from `src.zip`.
+serde = ["dep:serde", "javelin-parser/serde"]
+
 [dependencies]
 javelin-core.workspace = true
 javelin-document.workspace = true
 javelin-parser.workspace = true
 tracing.workspace = true
 zip.workspace = true
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde_json.workspace = true

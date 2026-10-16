@@ -16,6 +16,7 @@
 #![allow(unsafe_code)]
 
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use javelin_classpath::{TypeFacts, TypeWorld};
@@ -101,6 +102,7 @@ fn complete(request: &[u8]) -> Result<Answer, String> {
         let scopes = ScopeTree::build(&document, &tree);
         let files = Files::single(id, &syntax, &scopes);
 
+        let mut seen = HashSet::new();
         let found = javelin_semantic::member_completions_at(
             &document,
             &tree,
@@ -111,9 +113,15 @@ fn complete(request: &[u8]) -> Result<Answer, String> {
 
         Ok(match found {
             Some(found) => Answer {
+                // A type lists the members it inherits next to the ones it overrides, so
+                // `String` offers `length()` twice, from itself and from `CharSequence`. Same
+                // name and signature is one entry to the person typing.
                 items: found
                     .candidates
                     .into_iter()
+                    .filter(|candidate| {
+                        seen.insert((candidate.name.clone(), candidate.detail.clone()))
+                    })
                     .map(|candidate| Item {
                         label: candidate.name,
                         kind: kind(candidate.kind),
